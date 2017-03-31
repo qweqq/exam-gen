@@ -1,0 +1,45 @@
+<?xml version="1.0" encoding="utf-8"?>
+<section name="Dynamics">
+    <question>
+        <text>
+            Which fruits are orange ?
+        </text>
+        <answers>
+            <choose-single>
+                <correct-choice>
+                    orange
+                </correct-choice>
+                <choice>
+                    lemon
+                </choice>
+                <choice>
+                    potato
+                </choice>
+                <choice>
+                    pepper
+                </choice>
+            </choose-single>
+        </answers>
+    </question>
+    <question>
+        <text>
+            Which fruits are yellow ?
+        </text>
+        <answers>
+            <choose-multiple>
+                <correct-choice>
+                    lemon
+                </correct-choice>
+                <correct-choice>
+                    banana
+                </correct-choice>
+                <choice>
+                    tomato
+                </choice>
+                <choice>
+                    kiwi
+                </choice>
+            </choose-multiple>
+        </answers>
+    </question>
+</section>

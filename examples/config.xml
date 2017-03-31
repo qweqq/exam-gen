@@ -1,0 +1,27 @@
+<config>
+    <number>
+        1
+    </number>
+    <title>
+        Mechanics
+    </title>
+    <seeds>
+        <seed>5</seed>
+        <seed>15</seed>
+        <seed>25</seed>
+        <seed>35</seed>
+    </seeds>
+    <files>
+        <file>corpus/dynamics-1.xml</file>
+        <file>corpus/dynamics-2.xml</file>
+        <file>corpus/kinematics.xml</file>
+    </files>
+    <sections>
+        <section name="Kinematics">
+            <questions>1</questions>
+        </section>
+        <section name="Dynamics">
+            <questions>2</questions>
+        </section>
+    </sections>
+</config>

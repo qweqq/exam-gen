@@ -1,0 +1,34 @@
+<?xml version="1.0" encoding="utf-8"?>
+<section name="Dynamics">
+    <question>
+        <text>
+            Write down Newton's second law of motion
+        </text>
+        <answers>
+            <fill-blank/>
+        </answers>
+    </question>
+    <question>
+        <text>
+            You can use \TeX in questions!
+
+            $$\int_0^\infty e^{-x^2} dx=\frac{\sqrt{\pi}}{2}$$
+
+            \begin{enumerate}
+            \item One.
+            \item Two.
+            \item Three.
+            \end{enumerate}
+        </text>
+        <answers>
+            <choose-single>
+                <correct-choice>
+                    Yes
+                </correct-choice>
+                <choice>
+                    No
+                </choice>
+            </choose-single>
+        </answers>
+    </question>
+</section>

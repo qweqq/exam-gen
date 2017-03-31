@@ -1,0 +1,28 @@
+<?xml version="1.0" encoding="utf-8"?>
+<section name="Kinematics">
+    <question>
+        <text>
+            This is a sample question with fill blank
+        </text>
+        <answers>
+            <fill-blank/>
+        </answers>
+    </question>
+    <question>
+        <text>
+            This is a sample question with choices AND fill blank
+        </text>
+        <answers>
+            <choose-single>
+                <correct-choice>
+                    Yes
+                </correct-choice>
+                <choice>
+                    No
+                </choice>
+            </choose-single>
+
+            <fill-blank/>
+        </answers>
+    </question>
+</section>
