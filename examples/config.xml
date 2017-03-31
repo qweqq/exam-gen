@@ -1,10 +1,13 @@
 <config>
-    <number>
-        1
-    </number>
+    <name>
+        Test 1
+    </name>
     <title>
         Mechanics
     </title>
+    <var>
+        Variant
+    </var>
     <seeds>
         <seed>5</seed>
         <seed>15</seed>
