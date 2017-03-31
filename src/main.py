@@ -192,8 +192,11 @@ class Choice:
 
 
 class Exam:
-    def __init__(self, variant):
-        self.variant = variant
+    def __init__(self, seed, title, name, var):
+        self.seed = seed
+        self.title = title
+        self.name = name
+        self.var = var
         self.sections = collections.OrderedDict()
 
     def addOrMergeSection(self, section):
@@ -244,11 +247,11 @@ class Exam:
         \\firstpageheadrule
         \\firstpagefootrule
 
-        \\firstpageheader{Тест}{Операционни системи}{Вариант """ + str(self.variant) + """}
-        \\runningheader{Тест}{Операционни системи}{Вариант """ + str(self.variant) + """}
+        \\firstpageheader{""" + self.name + """}{""" + self.title + """}{""" + self.var + ' ' + str(self.seed) + """}
+        \\runningheader{""" + self.name + """}{""" + self.title + """}{""" + self.var + ' ' + str(self.seed) + """}
 
-        \\firstpagefooter{}{\\thepage\\ от \\numpages}{}
-        \\runningfooter{}{\\thepage\\ от \\numpages}{}
+        \\firstpagefooter{}{\\thepage\\ / \\numpages}{}
+        \\runningfooter{}{\\thepage\\ / \\numpages}{}
 
 
         \\begin{document}
@@ -275,7 +278,7 @@ class Exam:
         for seed in config.seeds:
             random.seed(seed)
 
-            exam = Exam(seed)
+            exam = Exam(seed, config.title, config.name, config.var)
             for filename in config.files:
                 exam.processFile(filename)
 
@@ -294,6 +297,9 @@ class Configuration:
     def __init__(self, seeds):
         self.seeds = seeds
         self.files = []
+        self.title = 'Physics'
+        self.name = 'Exam'
+        self.var = 'var'
         self.questionsPerSection = {}
 
     def getNumberOfQuestionsForSection(self, section_name):
@@ -324,7 +330,7 @@ class Configuration:
 
         for file_element in files_element:
             # resolve files relative to config directory
-            filename = os.path.join(config_dirname, file_element.text)
+            filename = os.path.join(config_dirname, file_element.text.strip())
             assert os.path.isfile(filename)
             config.files.append(filename)
 
@@ -337,6 +343,18 @@ class Configuration:
             assert questions_element is not None
             config.questionsPerSection[name] = int(questions_element.text)
 
+        title_element = config_element.find('title')
+        if title_element is not None:
+            config.title = title_element.text.strip()
+
+        name_element = config_element.find('name')
+        if name_element is not None:
+            config.name = name_element.text.strip()
+
+        var_element = config_element.find('var')
+        if var_element is not None:
+            config.var = var_element.text.strip()
+
         return config
 
 
@@ -348,5 +366,5 @@ if __name__ == '__main__':
     config = Configuration.fromXmlFile(sys.argv[1])
     exams = Exam.fromConfig(config)
     for exam in exams:
-        with open('exam_' + str(exam.variant) + '.tex', 'w') as f:
+        with open('exam_' + str(exam.seed) + '.tex', 'w') as f:
             print(exam.toLaTeX(), file=f)
