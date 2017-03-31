@@ -5,9 +5,12 @@
     <title>
         Mechanics
     </title>
-    <var>
+    <variant>
         Variant
-    </var>
+    </variant>
+    <correct-answers-variant>
+        true
+    </correct-answers-variant>
     <seeds>
         <seed>5</seed>
         <seed>15</seed>

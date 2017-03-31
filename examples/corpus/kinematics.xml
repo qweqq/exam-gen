@@ -5,7 +5,11 @@
             This is a sample question with fill blank
         </text>
         <answers>
-            <fill-blank/>
+            <fill-blank length="3">
+                <correct-text>
+                    Sample long correct answer
+                </correct-text>
+            </fill-blank>
         </answers>
     </question>
     <question>
@@ -22,7 +26,11 @@
                 </choice>
             </choose-single>
 
-            <fill-blank/>
+            <fill-blank>
+                <correct-text>
+                    Yes
+                </correct-text>
+            </fill-blank>
         </answers>
     </question>
 </section>

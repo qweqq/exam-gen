@@ -5,7 +5,11 @@
             Write down Newton's second law of motion
         </text>
         <answers>
-            <fill-blank/>
+            <fill-blank>
+                <correct-text>
+                    $a=\frac{m}{a}$
+                </correct-text>
+            </fill-blank>
         </answers>
     </question>
     <question>

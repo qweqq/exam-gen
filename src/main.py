@@ -152,16 +152,27 @@ class AnswersGroup:
 
 
 class BlankChoice:
-    def __init__(self, length_inches):
+    def __init__(self, correct_answer, length_inches):
+        self.correctAnswer = correct_answer
         self.length = length_inches
 
     def toLaTeX(self):
         latex = '\\fillin'
+        if self.correctAnswer is not None:
+            latex += '[' + self.correctAnswer + ']'
+        latex += '[' + self.length + 'in]'
         return latex
 
     @classmethod
-    def fromXmlElement(cls, group_element):
-        return BlankChoice(2)
+    def fromXmlElement(cls, element):
+        correct_text_element = element.find('correct-text')
+        text = None
+        if correct_text_element is not None:
+            text = correct_text_element.text.strip()
+
+        length = element.get('length', '2')
+
+        return BlankChoice(text, length)
 
 
 class Choice:
@@ -192,11 +203,12 @@ class Choice:
 
 
 class Exam:
-    def __init__(self, seed, title, name, var):
+    def __init__(self, seed, title, name, variant, showCorrectAnswers):
         self.seed = seed
         self.title = title
         self.name = name
-        self.var = var
+        self.variant = variant
+        self.showCorrectAnswers = showCorrectAnswers
         self.sections = collections.OrderedDict()
 
     def addOrMergeSection(self, section):
@@ -230,7 +242,7 @@ class Exam:
 
     def toLaTeX(self):
         latex = """
-        \\documentclass[a4paper]{exam}
+        \\documentclass[a4paper""" + (',answers' if self.showCorrectAnswers else '') + """]{exam}
 
         \\usepackage[T1,T2A]{fontenc}
         \\usepackage[utf8]{inputenc}
@@ -247,8 +259,8 @@ class Exam:
         \\firstpageheadrule
         \\firstpagefootrule
 
-        \\firstpageheader{""" + self.name + """}{""" + self.title + """}{""" + self.var + ' ' + str(self.seed) + """}
-        \\runningheader{""" + self.name + """}{""" + self.title + """}{""" + self.var + ' ' + str(self.seed) + """}
+        \\firstpageheader{""" + self.name + """}{""" + self.title + """}{""" + self.variant + ' ' + str(self.seed) + """}
+        \\runningheader{""" + self.name + """}{""" + self.title + """}{""" + self.variant + ' ' + str(self.seed) + """}
 
         \\firstpagefooter{}{\\thepage\\ / \\numpages}{}
         \\runningfooter{}{\\thepage\\ / \\numpages}{}
@@ -274,22 +286,43 @@ class Exam:
 
     @classmethod
     def fromConfig(cls, config):
-        exams = []
-        for seed in config.seeds:
+
+        def helper(seed, title, name, variant, showCorrectAnswers, files, questionsPerSection):
             random.seed(seed)
 
-            exam = Exam(seed, config.title, config.name, config.var)
-            for filename in config.files:
+            exam = Exam(seed, title, name, variant, showCorrectAnswers)
+            for filename in files:
                 exam.processFile(filename)
 
             exam.shuffle()
 
-            for section_name, num_questions in config.questionsPerSection.items():
+            for section_name, num_questions in questionsPerSection.items():
                 assert exam.sectionExistsByName(section_name)
                 section = exam.sections[section_name]
                 section.reduceQuestionsToSample(num_questions)
 
+            return exam
+
+        exams = []
+        for seed in config.seeds:
+            args = {
+                'seed': seed,
+                'title': config.title,
+                'name': config.name,
+                'variant': config.variant,
+                'showCorrectAnswers': False,
+                'files': config.files,
+                'questionsPerSection': config.questionsPerSection
+            }
+
+            exam = helper(**args)
             exams.append(exam)
+
+            if config.correctAnswersVariant:
+                args['showCorrectAnswers'] = True
+                exam = helper(**args)
+                exams.append(exam)
+
         return exams
 
 
@@ -299,7 +332,8 @@ class Configuration:
         self.files = []
         self.title = 'Physics'
         self.name = 'Exam'
-        self.var = 'var'
+        self.variant = 'var'
+        self.correctAnswersVariant = True
         self.questionsPerSection = {}
 
     def getNumberOfQuestionsForSection(self, section_name):
@@ -351,9 +385,13 @@ class Configuration:
         if name_element is not None:
             config.name = name_element.text.strip()
 
-        var_element = config_element.find('var')
-        if var_element is not None:
-            config.var = var_element.text.strip()
+        variant_element = config_element.find('variant')
+        if variant_element is not None:
+            config.variant = variant_element.text.strip()
+
+        correct_answers_variant_element = config_element.find('correct-answers-variant')
+        if correct_answers_variant_element is not None:
+            config.correctAnswersVariant = bool(correct_answers_variant_element.text.strip())
 
         return config
 
@@ -366,5 +404,5 @@ if __name__ == '__main__':
     config = Configuration.fromXmlFile(sys.argv[1])
     exams = Exam.fromConfig(config)
     for exam in exams:
-        with open('exam_' + str(exam.seed) + '.tex', 'w') as f:
+        with open('exam_' + str(exam.seed) + ('_answers' if exam.showCorrectAnswers else '') + '.tex', 'w') as f:
             print(exam.toLaTeX(), file=f)
