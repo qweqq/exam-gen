@@ -1,4 +1,5 @@
 import collections
+import hashlib
 import os
 import random
 import sys
@@ -14,15 +15,14 @@ class Section:
         self.questions += other.questions
 
     def addQuestion(self, question):
+        assert question not in self.questions
         self.questions.append(question)
 
-    def removeQuestion(self, question):
-        self.questions.remove(question)
-
     def shuffle(self):
-        random.shuffle(self.questions)
-        for question in self.questions:
+        for question in sorted(self.questions, key=lambda o: o.text):
             question.shuffle()
+
+        random.shuffle(self.questions)
 
     def reduceQuestionsToSample(self, k):
         self.questions = random.sample(self.questions, k)
@@ -59,6 +59,12 @@ class Question:
     def shuffle(self):
         self.answers.shuffle()
 
+    def __eq__(self, other):
+        if isinstance(other, Question):
+            return self.text == other.text and self.answers == other.answers
+        else:
+            return False
+
     def toLaTeX(self):
         latex = '\\question'
         latex += '\n'
@@ -72,7 +78,7 @@ class Question:
     def fromXmlElement(cls, element):
         text_element = element.find('text')
         assert text_element is not None
-        text = text_element.text
+        text = text_element.text.strip()
 
         answers_element = element.find('answers')
         answers = Answers.fromXmlElement(answers_element)
@@ -83,6 +89,12 @@ class Question:
 class Answers:
     def __init__(self):
         self.groups = []
+
+    def __eq__(self, other):
+        if isinstance(other, Answers):
+            return self.groups == other.groups
+        else:
+            return False
 
     def shuffle(self):
         for group in self.groups:
@@ -116,6 +128,12 @@ class AnswersGroup:
 
     def shuffle(self):
         random.shuffle(self.choices)
+
+    def __eq__(self, other):
+        if isinstance(other, AnswersGroup):
+            return self.type == other.type and self.choices == other.choices
+        else:
+            return False
 
     def toLaTeX(self):
         is_blank = self.type != 'fill-blank'
@@ -163,6 +181,12 @@ class BlankChoice:
         latex += '[' + self.length + 'in]'
         return latex
 
+    def __eq__(self, other):
+        if isinstance(other, BlankChoice):
+            return self.correctAnswer == other.correctAnswer
+        else:
+            return False
+
     @classmethod
     def fromXmlElement(cls, element):
         correct_text_element = element.find('correct-text')
@@ -182,6 +206,12 @@ class Choice:
         self.is_correct = is_correct
         self.text = text
 
+    def __eq__(self, other):
+        if isinstance(other, Choice):
+            return self.is_correct == other.is_correct and self.text == other.text
+        else:
+            return False
+
     def toLaTeX(self):
         if self.is_correct:
             latex = '\\CorrectChoice'
@@ -197,7 +227,7 @@ class Choice:
         tag = element.tag
         assert tag in cls.supported_choice_types
         is_correct = (tag == 'correct-choice')
-        text = element.text
+        text = element.text.strip()
 
         return Choice(is_correct, text)
 
@@ -237,17 +267,22 @@ class Exam:
         self.addOrMergeSection(section)
 
     def shuffle(self):
-        for section in self.sections.values():
+        for section in sorted(self.sections.values(), key=lambda o: o.name):
             section.shuffle()
+
+    def print(self):
+        for blah in sorted(self.__dict__.items(), key=lambda o:o[0]):
+            print(blah)
 
     def toLaTeX(self):
         latex = """
         \\documentclass[a4paper""" + (',answers' if self.showCorrectAnswers else '') + """]{exam}
 
-        \\usepackage[T1,T2A]{fontenc}
+        \\usepackage[T2A]{fontenc}
         \\usepackage[utf8]{inputenc}
         \\usepackage[bulgarian]{babel}
         \\selectlanguage{bulgarian}
+        \\usepackage{minted}
 
         \\usepackage{color}
 
@@ -269,7 +304,7 @@ class Exam:
         \\begin{document}
 
         \\begin{questions}
-        
+
         """
 
         for section in self.sections.values():
@@ -277,7 +312,7 @@ class Exam:
             latex += section.toLaTeX()
 
         latex += """
-        
+
         \\end{questions}
         \\end{document}
         """
@@ -304,7 +339,7 @@ class Exam:
             return exam
 
         exams = []
-        for seed in config.seeds:
+        for seed in sorted(config.seeds):
             args = {
                 'seed': seed,
                 'title': config.title,
@@ -334,15 +369,11 @@ class Configuration:
         self.name = 'Exam'
         self.variant = 'var'
         self.correctAnswersVariant = True
-        self.questionsPerSection = {}
-
-    def getNumberOfQuestionsForSection(self, section_name):
-        return self.questionsPerSection[section_name]
+        self.questionsPerSection = collections.OrderedDict()
 
     @classmethod
     def fromXmlFile(cls, filename):
         assert os.path.isfile(filename)
-        config_dirname = os.path.dirname(filename)
 
         tree = ET.parse(filename)
         config_element = tree.getroot()
@@ -352,7 +383,7 @@ class Configuration:
 
         seeds = []
         for seed_element in seeds_element:
-            seed = int(seed_element.text)
+            seed = int(seed_element.text.strip())
             assert seed is not None
             seeds.append(seed)
         assert len(seeds) > 0
@@ -362,6 +393,7 @@ class Configuration:
         files_element = config_element.find('files')
         assert files_element is not None
 
+        config_dirname = os.path.dirname(filename)
         for file_element in files_element:
             # resolve files relative to config directory
             filename = os.path.join(config_dirname, file_element.text.strip())
@@ -372,10 +404,10 @@ class Configuration:
         assert sections_element is not None
 
         for section_element in sections_element:
-            name = section_element.get('name')
+            name = section_element.get('name').strip()
             questions_element = section_element.find('questions')
             assert questions_element is not None
-            config.questionsPerSection[name] = int(questions_element.text)
+            config.questionsPerSection[name] = int(questions_element.text.strip())
 
         title_element = config_element.find('title')
         if title_element is not None:
@@ -391,7 +423,10 @@ class Configuration:
 
         correct_answers_variant_element = config_element.find('correct-answers-variant')
         if correct_answers_variant_element is not None:
-            config.correctAnswersVariant = bool(correct_answers_variant_element.text.strip())
+            if correct_answers_variant_element.text is not None:
+                config.correctAnswersVariant = bool(correct_answers_variant_element.text.strip())
+            else:
+                config.correctAnswersVariant = False
 
         return config
 
@@ -403,6 +438,11 @@ if __name__ == '__main__':
 
     config = Configuration.fromXmlFile(sys.argv[1])
     exams = Exam.fromConfig(config)
-    for exam in exams:
-        with open('exam_' + str(exam.seed) + ('_answers' if exam.showCorrectAnswers else '') + '.tex', 'w') as f:
-            print(exam.toLaTeX(), file=f)
+    for exam in sorted(exams, key=lambda f: f.seed):
+        print(exam.seed)
+        # with open('exam_' + str(exam.seed) + ('_answers' if exam.showCorrectAnswers else '') + '.tex', 'w') as f:
+        #     print(exam.toLaTeX(), file=f)
+        m = hashlib.sha512()
+        exam.print()
+        m.update(bytes(exam.toLaTeX(), encoding="utf8"))
+        print(m.hexdigest())
