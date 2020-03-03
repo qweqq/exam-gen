@@ -440,8 +440,8 @@ if __name__ == '__main__':
     exams = Exam.fromConfig(config)
     for exam in sorted(exams, key=lambda f: f.seed):
         print(exam.seed)
-        # with open('exam_' + str(exam.seed) + ('_answers' if exam.showCorrectAnswers else '') + '.tex', 'w') as f:
-        #     print(exam.toLaTeX(), file=f)
+        with open('exam_' + str(exam.seed) + ('_answers' if exam.showCorrectAnswers else '') + '.tex', 'w') as f:
+            print(exam.toLaTeX(), file=f)
         m = hashlib.sha512()
         exam.print()
         m.update(bytes(exam.toLaTeX(), encoding="utf8"))
