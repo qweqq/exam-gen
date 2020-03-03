@@ -13,7 +13,7 @@ but not tested)
 On Ubuntu and Debian you can install texlive like this:
 
 ```bash
-sudo apt-get install texlive texlive-science texlive-lang-cyrillic
+sudo apt-get install texlive texlive-science texlive-lang-cyrillic texlive-latex-extra
 
 ```
 
