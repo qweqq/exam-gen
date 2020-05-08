@@ -282,7 +282,7 @@ class Exam:
         \\usepackage[utf8]{inputenc}
         \\usepackage[bulgarian]{babel}
         \\selectlanguage{bulgarian}
-        \\usepackage{minted}
+        \\usepackage[outputdir=out]{minted}
 
         \\usepackage{color}
 
